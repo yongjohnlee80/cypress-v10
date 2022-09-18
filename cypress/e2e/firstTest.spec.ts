@@ -99,7 +99,7 @@ describe("Our first suite", () => {
     });
   });
 
-  it.only("invoke command", () => {
+  it("invoke command", () => {
     // 1
     cy.get('[for="exampleInputEmail1"]').should("contain", "Email address");
 
@@ -125,10 +125,95 @@ describe("Our first suite", () => {
       .find("nb-checkbox")
       .click()
       .find(".custom-checkbox")
-      .invoke('attr', 'class')
-    //   .then(classValue => {
-    //     expect(classValue).to.contain('checked');
-    //   })
-      .should('contain', 'checked')
+      .invoke("attr", "class")
+      //   .then(classValue => {
+      //     expect(classValue).to.contain('checked');
+      //   })
+      .should("contain", "checked");
+  });
+
+  it("assert property", () => {
+    cy.visit("/");
+    cy.contains("Forms").click();
+    cy.contains("Datepicker").click();
+
+    cy.contains("nb-card", "Common Datepicker")
+      .find("input")
+      .then((input) => {
+        cy.wrap(input).click();
+        cy.get("nb-calendar-day-picker").contains("17").click();
+        cy.wrap(input)
+          .invoke("prop", "value")
+          .should("contain", "Sep 17, 2022");
+      });
+  });
+
+  it("radio button", () => {
+    cy.visit("/");
+    cy.contains("Forms").click();
+    cy.contains("Form Layout").click();
+
+    cy.contains("nb-card", "Using the Grid")
+      .find('[type="radio"]')
+      .then((radioButton) => {
+        cy.wrap(radioButton)
+          .first()
+          .check({ force: true })
+          .should("be.checked");
+        cy.wrap(radioButton).eq(1).check({ force: true });
+        cy.wrap(radioButton).eq(0).should("not.be.checked");
+        cy.wrap(radioButton).eq(2).should("be.disabled");
+      });
+  });
+
+  it("lists and dropdowns", () => {
+    cy.visit("/");
+    // 1
+    // cy.get('nav nb-select').click();
+    // cy.get('.options-list').contains('Dark').click();
+    // cy.get('nav nb-select').should('contain', 'Dark');
+    // cy.get('nb-layout-header nav').should('have.css', 'background-color', 'rgb(34, 43, 69)');
+
+    // 2 && alternative use cy.select() function.
+    cy.get("nav nb-select").then((dropdown) => {
+      cy.wrap(dropdown).click();
+      cy.get(".options-list nb-option").then((options) => {
+        let itemLength = options.length;
+        cy.wrap(options).each((listItem, idx) => {
+          const itemText = listItem.text().trim();
+
+          const colors = {
+            Light: "rgb(255, 255, 255)",
+            Dark: "rgb(34, 43, 69)",
+            Cosmic: "rgb(50, 50, 89)",
+            Corporate: "rgb(255, 255, 255)",
+          };
+
+          cy.wrap(listItem).click();
+          cy.wrap(dropdown).should("contain", itemText);
+          cy.get("nb-layout-header nav").should(
+            "have.css",
+            "background-color",
+            colors[itemText]
+          );
+          if (idx < itemLength - 1) cy.wrap(dropdown).click();
+        });
+      });
+    });
+  });
+
+  it.only("Web tables", () => {
+    cy.visit("/");
+    cy.contains("Tables & Data").click();
+    cy.contains("Smart Table").click();
+
+    cy.get("tbody")
+      .contains("tr", "Larry")
+      .then((tableRow) => {
+        cy.wrap(tableRow).find(".nb-edit").click();
+        cy.wrap(tableRow).find('[placeholder="Age"]').clear().type("25");
+        cy.wrap(tableRow).find(".nb-checkmark").click();
+        cy.wrap(tableRow).find("td").eq(6).invoke('text').should('equal', '25')
+      });
   });
 });
