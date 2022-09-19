@@ -135,6 +135,28 @@ describe("Our first suite", () => {
   });
 
   it("assert property", () => {
+    function selectDayFromCurrent(day : number) {
+      let date = new Date();
+      date.setDate(date.getDate() + day);
+      let futureDay = date.getDate();
+      let futureMonth = date.toLocaleString("default", { month: "short" });
+      let dateAssert = futureMonth + " " + futureDay + ", " + date.getFullYear();
+      cy.get("nb-calendar-navigation")
+        .invoke("attr", "ng-reflect-date")
+        .then((dateAttribute) => {
+          if (!dateAttribute.includes(futureMonth)) {
+            cy.get('[data-name="chevron-right"]').click();
+            selectDayFromCurrent(day);
+          } else {
+            cy.get(
+              'nb-calendar-day-picker [class="day-cell ng-star-inserted"]'
+            )
+              .contains(futureDay)
+              .click();
+          }
+        });
+      return dateAssert;
+    }
     cy.visit("/");
     cy.contains("Forms").click();
     cy.contains("Datepicker").click();
@@ -143,10 +165,9 @@ describe("Our first suite", () => {
       .find("input")
       .then((input) => {
         cy.wrap(input).click();
-        cy.get("nb-calendar-day-picker").contains("17").click();
-        cy.wrap(input)
-          .invoke("prop", "value")
-          .should("contain", "Sep 17, 2022");
+        let dateAssert = selectDayFromCurrent(50);
+
+        cy.wrap(input).invoke("prop", "value").should("contain", dateAssert);
       });
   });
 
@@ -204,7 +225,7 @@ describe("Our first suite", () => {
     });
   });
 
-  it.only("Web tables", () => {
+  it("Web tables", () => {
     cy.visit("/");
     cy.contains("Tables & Data").click();
     cy.contains("Smart Table").click();
@@ -238,14 +259,14 @@ describe("Our first suite", () => {
       });
 
     //3
-    const ages = [20, 30, 40]
+    const ages = [20, 30, 40];
 
-    cy.wrap(ages).each(age => {
-      cy.get('thead [placeholder="Age"]').clear().type(String(age))
-      cy.wait(500)
-      cy.get('tbody tr').each(tableRow => {
-        cy.wrap(tableRow).find('td').eq(6).should('contain', age)
-      })
-    })
+    cy.wrap(ages).each((age) => {
+      cy.get('thead [placeholder="Age"]').clear().type(String(age));
+      cy.wait(500);
+      cy.get("tbody tr").each((tableRow) => {
+        cy.wrap(tableRow).find("td").eq(6).should("contain", age);
+      });
+    });
   });
 });
